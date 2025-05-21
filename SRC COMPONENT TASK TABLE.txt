@@ -1,0 +1,143 @@
+import React, { useState } from 'react';
+import TaskRow from './TaskRow';
+
+function TaskTable({ tasks, groups, addGroup, addTask, updateTask, user, boardId }) {
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newTask, setNewTask] = useState({
+    name: '',
+    assignee: user.email,
+    status: 'Em andamento',
+    dueDate: '',
+    priority: 'Média',
+    notes: '',
+    timelineStart: '',
+    timelineEnd: ''
+  });
+
+  const handleAddGroup = (e) => {
+    e.preventDefault();
+    if (newGroupName.trim()) {
+      addGroup(newGroupName, boardId);
+      setNewGroupName('');
+    }
+  };
+
+  const handleAddTask = (groupId) => (e) => {
+    e.preventDefault();
+    if (newTask.name.trim()) {
+      addTask(newTask, groupId);
+      setNewTask({
+        name: '',
+        assignee: user.email,
+        status: 'Em andamento',
+        dueDate: '',
+        priority: 'Média',
+        notes: '',
+        timelineStart: '',
+        timelineEnd: ''
+      });
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Tarefas</h2>
+      <form onSubmit={handleAddGroup} className="mb-4">
+        <input
+          type="text"
+          value={newGroupName}
+          onChange={(e) => setNewGroupName(e.target.value)}
+          placeholder="Novo Grupo"
+          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button type="submit" className="ml-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+          Adicionar Grupo
+        </button>
+      </form>
+      {groups.map(group => (
+        <div key={group.id} className="mb-6">
+          <div className="flex justify-between items-center bg-gray-200 p-2 rounded">
+            <h3 className="text-lg font-semibold">{group.name}</h3>
+            <span className="text-sm text-gray-600">{tasks.filter(task => task.groupId === group.id).length} Tarefas</span>
+          </div>
+          <div className="grid grid-cols-7 gap-2 font-bold bg-gray-200 p-2 mt-2 rounded">
+            <div>Tarefa</div>
+            <div>Responsável</div>
+            <div>Status</div>
+            <div>Prazo</div>
+            <div>Prioridade</div>
+            <div>Notas</div>
+            <div>Cronograma</div>
+          </div>
+          <form onSubmit={handleAddTask(group.id)} className="grid grid-cols-7 gap-2 p-2 bg-gray-50 rounded">
+            <input
+              type="text"
+              value={newTask.name}
+              onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+              placeholder="Nome da Tarefa"
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={newTask.assignee}
+              onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+              placeholder="Responsável"
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              value={newTask.status}
+              onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option>Em andamento</option>
+              <option>Feito</option>
+              <option>Parado</option>
+            </select>
+            <input
+              type="date"
+              value={newTask.dueDate}
+              onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option>Baixa</option>
+              <option>Média</option>
+              <option>Alta</option>
+            </select>
+            <input
+              type="text"
+              value={newTask.notes}
+              onChange={(e) => setNewTask({ ...newTask, notes: e.target.value })}
+              placeholder="Notas"
+              className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={newTask.timelineStart}
+                onChange={(e) => setNewTask({ ...newTask, timelineStart: e.target.value })}
+                className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="date"
+                value={newTask.timelineEnd}
+                onChange={(e) => setNewTask({ ...newTask, timelineEnd: e.target.value })}
+                className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Adicionar</button>
+          </form>
+          {tasks.filter(task => task.groupId === group.id).map(task => (
+            <TaskRow key={task.id} task={task} updateTask={updateTask} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default TaskTable;

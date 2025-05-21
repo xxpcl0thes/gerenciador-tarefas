@@ -1,0 +1,110 @@
+import React, { useState } from 'react';
+
+function TaskRow({ task, updateTask }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState({ ...task });
+
+  const handleSave = () => {
+    updateTask(task.id, editedTask);
+    setIsEditing(false);
+  };
+
+  const statusColors = {
+    'Em andamento': 'bg-yellow-300',
+    'Feito': 'bg-green-300',
+    'Parado': 'bg-red-300'
+  };
+
+  const priorityColors = {
+    'Baixa': 'text-green-600',
+    'Média': 'text-yellow-600',
+    'Alta': 'text-red-600'
+  };
+
+  return (
+    <div className="grid grid-cols-7 gap-2 p-2 border-b hover:bg-gray-50">
+      {isEditing ? (
+        <>
+          <input
+            type="text"
+            value={editedTask.name}
+            onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="text"
+            value={editedTask.assignee}
+            onChange={(e) => setEditedTask({ ...editedTask, assignee: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            value={editedTask.status}
+            onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option>Em andamento</option>
+            <option>Feito</option>
+            <option>Parado</option>
+          </select>
+          <input
+            type="date"
+            value={editedTask.dueDate}
+            onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            value={editedTask.priority}
+            onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option>Baixa</option>
+            <option>Média</option>
+            <option>Alta</option>
+          </select>
+          <input
+            type="text"
+            value={editedTask.notes}
+            onChange={(e) => setEditedTask({ ...editedTask, notes: e.target.value })}
+            className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={editedTask.timelineStart}
+              onChange={(e) => setEditedTask({ ...editedTask, timelineStart: e.target.value })}
+              className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="date"
+              value={editedTask.timelineEnd}
+              onChange={(e) => setEditedTask({ ...editedTask, timelineEnd: e.target.value })}
+              className="p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button onClick={handleSave} className="bg-green-500 text-white p-1 rounded hover:bg-green-600">Salvar</button>
+        </>
+      ) : (
+        <>
+          <div onClick={() => setIsEditing(true)} className="cursor-pointer">{task.name}</div>
+          <div onClick={() => setIsEditing(true)} className="cursor-pointer flex items-center">
+            <img src={`https://ui-avatars.com/api/?name=${task.assignee}`} alt="avatar" className="w-6 h-6 rounded-full mr-2" />
+            {task.assignee}
+          </div>
+          <div onClick={() => setIsEditing(true)} className={`cursor-pointer ${statusColors[task.status]} p-1 rounded text-center text-black`}>
+            {task.status}
+          </div>
+          <div onClick={() => setIsEditing(true)} className="cursor-pointer">{task.dueDate}</div>
+          <div onClick={() => setIsEditing(true)} className={`cursor-pointer ${priorityColors[task.priority]}`}>
+            {task.priority}
+          </div>
+          <div onClick={() => setIsEditing(true)} className="cursor-pointer">{task.notes}</div>
+          <div onClick={() => setIsEditing(true)} className="cursor-pointer">
+            {task.timelineStart} - {task.timelineEnd}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default TaskRow;

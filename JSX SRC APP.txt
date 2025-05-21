@@ -1,0 +1,155 @@
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
+import Sidebar from './components/Sidebar';
+import TaskTable from './components/TaskTable';
+import Login from './components/Login';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCUKUpSj4WtrJ_SpS4EovVibpXwULQFn40",
+  authDomain: "projeto-gerencimento.firebaseapp.com",
+  projectId: "projeto-gerencimento",
+  storageBucket: "projeto-gerencimento.firebasestorage.app",
+  messagingSenderId: "129075998332",
+  appId: "1:129075998332:web:d6e8d79eb3f8570f0ee3f9",
+  measurementId: "G-D0RQZDJCN1"
+};
+
+// Inicializa Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [boards, setBoards] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [selectedBoard, setSelectedBoard] = useState(null);
+
+  // Monitora estado de autenticação
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Carrega quadros, grupos e tarefas do Firestore
+  useEffect(() => {
+    if (user) {
+      const boardsRef = collection(db, 'boards');
+      const groupsRef = collection(db, 'groups');
+      const tasksRef = collection(db, 'tasks');
+
+      const unsubscribeBoards = onSnapshot(boardsRef, (snapshot) => {
+        const boardData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setBoards(boardData);
+        if (!selectedBoard && boardData.length > 0) {
+          setSelectedBoard(boardData[0].id);
+        }
+      });
+
+      const unsubscribeGroups = onSnapshot(groupsRef, (snapshot) => {
+        const groupData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setGroups(groupData);
+      });
+
+      const unsubscribeTasks = onSnapshot(tasksRef, (snapshot) => {
+        const taskData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setTasks(taskData);
+      });
+
+      return () => {
+        unsubscribeBoards();
+        unsubscribeGroups();
+        unsubscribeTasks();
+      };
+    }
+  }, [user, selectedBoard]);
+
+  // Função de login
+  const handleLogin = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      alert('Erro ao fazer login: ' + error.message);
+    }
+  };
+
+  // Função de logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      alert('Erro ao fazer logout: ' + error.message);
+    }
+  };
+
+  // Adiciona novo quadro
+  const addBoard = async (name) => {
+    try {
+      await addDoc(collection(db, 'boards'), { name, createdBy: user.uid });
+    } catch (error) {
+      alert('Erro ao adicionar quadro: ' + error.message);
+    }
+  };
+
+  // Adiciona novo grupo
+  const addGroup = async (name, boardId) => {
+    try {
+      await addDoc(collection(db, 'groups'), { name, boardId, createdBy: user.uid });
+    } catch (InlineEquation id="0" latex="error") {
+      alert('Erro ao adicionar grupo: ' + error.message);
+    }
+  };
+
+  // Adiciona nova tarefa
+  const addTask = async (task, groupId) => {
+    try {
+      await addDoc(collection(db, 'tasks'), { ...task, boardId: selectedBoard, groupId, createdBy: user.uid });
+    } catch (error) {
+      alert('Erro ao adicionar tarefa: ' + error.message);
+    }
+  };
+
+  // Atualiza tarefa
+  const updateTask = async (taskId, updatedFields) => {
+    try {
+      const taskRef = doc(db, 'tasks', taskId);
+      await updateDoc(taskRef, updatedFields);
+    } catch (error) {
+      alert('Erro ao atualizar tarefa: ' + error.message);
+    }
+  };
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar
+        boards={boards}
+        selectedBoard={selectedBoard}
+        setSelectedBoard={setSelectedBoard}
+        addBoard={addBoard}
+        onLogout={handleLogout}
+      />
+      <div className="flex-1 p-6 overflow-auto">
+        <TaskTable
+          tasks={tasks.filter(task => task.boardId === selectedBoard)}
+          groups={groups.filter(group => group.boardId === selectedBoard)}
+          addGroup={addGroup}
+          addTask={addTask}
+          updateTask={updateTask}
+          user={user}
+          boardId={selectedBoard}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default App;
